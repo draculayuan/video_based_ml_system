@@ -5,7 +5,7 @@ from kafka import KafkaConsumer
 import time
 import pymysql
 
-def consume(display_topic, offset, db_info):
+def consume_save(display_topic, offset, db_info):
     # init db connection
     db = pymysql.connect(db_info['host'], db_info['user'], db_info['passwd'], db_info['db'])
     cursor = db.cursor()

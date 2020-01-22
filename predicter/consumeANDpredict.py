@@ -29,7 +29,7 @@ def detect_and_predict(detector, im, model):
         results.append(pred)
     return results
 
-def consume(raw_topic, offset, det_path, model_path, display_topic):
+def consume_pred(raw_topic, offset, det_path, model_path, display_topic):
     # producer to publish to display topic
     producer = connect_kafka_producer()
     # face detector to crop faces
