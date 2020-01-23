@@ -13,13 +13,15 @@ def connect_kafka_producer():
     finally:
         return _producer
 
-def frame_and_publish(video_path, topic, key):
+def frame_and_publish(video_path, topic, key, event):
     producer = connect_kafka_producer()
     vidcap = cv2.VideoCapture(video_path)
     success, image = vidcap.read()
     count = 0
     while success:
         # capture frame
+        if event.is_set():
+            break
         success, image = vidcap.read()
         #publish to kafka topic
         try:

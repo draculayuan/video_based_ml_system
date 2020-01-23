@@ -29,7 +29,7 @@ def detect_and_predict(detector, im, model):
         results.append(pred)
     return results
 
-def consume_pred(raw_topic, offset, det_path, model_path, display_topic):
+def consume_pred(raw_topic, offset, det_path, model_path, display_topic, event):
     # producer to publish to display topic
     producer = connect_kafka_producer()
     # face detector to crop faces
@@ -41,27 +41,34 @@ def consume_pred(raw_topic, offset, det_path, model_path, display_topic):
     consumer = KafkaConsumer(raw_topic, auto_offset_reset=offset, bootstrap_servers=['localhost:9092'], api_version=(0,10), consumer_timeout_ms=1000)
     key = bytes('display', encoding='utf-8')
     # predict one by one and publish the predicted result
-    for im in consumer:
-        im = im.value
-        try:
-            im = np.frombuffer(im, dtype=np.int8)
-            im = cv2.imdecode(im, cv2.IMREAD_COLOR)
-            # predict
-            preds = detect_and_predict(detector, im, model)
-            # push to kafka topic
-            print('{} faces detected in current frame'.format(len(preds)))
-            for p in preds:
-                try:
-                    p_bytes = bytes(str(p), encoding='utf-8')
-                    producer.send(display_topic, key=key, value=p_bytes)
-                    producer.flush()
-                    print('results {} predicted and published successfully'.format(p))
-                except Exception as ex:
-                    print('A problem occurred when publishing to display topic')
-                    print(str(ex))
-        except Exception as ex:
-            print('failed')
-            print(ex)
+    flag = True
+    while flag:
+        for im in consumer:
+            # terminate
+            if event.is_set():
+                # quit two layers of loop
+                flag = False
+                break
+            im = im.value
+            try:
+                im = np.frombuffer(im, dtype=np.int8)
+                im = cv2.imdecode(im, cv2.IMREAD_COLOR)
+                # predict
+                preds = detect_and_predict(detector, im, model)
+                # push to kafka topic
+                print('{} faces detected in current frame'.format(len(preds)))
+                for p in preds:
+                    try:
+                        p_bytes = bytes(str(p), encoding='utf-8')
+                        producer.send(display_topic, key=key, value=p_bytes)
+                        producer.flush()
+                        print('results {} predicted and published successfully'.format(p))
+                    except Exception as ex:
+                        print('A problem occurred when publishing to display topic')
+                        print(str(ex))
+            except Exception as ex:
+                print('failed')
+                print(ex)
     if producer is not None:
         producer.close()
     consumer.close()
