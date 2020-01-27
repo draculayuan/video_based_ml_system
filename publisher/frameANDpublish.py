@@ -1,7 +1,14 @@
 # import packages
-
+import logging
 import cv2
+import os
+import sys
 from kafka import KafkaProducer
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+parent_path = os.path.dirname(dir_path)
+sys.path.append(dir_path)
+sys.path.append(parent_path)
 
 def connect_kafka_producer():
     _producer = None
@@ -14,6 +21,13 @@ def connect_kafka_producer():
         return _producer
 
 def frame_and_publish(video_path, topic, key, event):
+    # logger
+    logging.basicConfig(filename='logs/publisher_log.txt',
+                        filemode='a',
+                        level=logging.DEBUG)
+    pub_logger = logging.getLogger()
+    pub_logger.info("New publishment starts")
+
     producer = connect_kafka_producer()
     vidcap = cv2.VideoCapture(video_path)
     success, image = vidcap.read()
@@ -29,11 +43,11 @@ def frame_and_publish(video_path, topic, key, event):
             ret, buffer = cv2.imencode('.jpg', image)
             producer.send(topic, key=key_bytes, value=buffer.tobytes())
             producer.flush()
-            print('Image {} has been published successfully'.format(count))
+            pub_logger.debug('Image {} has been published successfully'.format(count))
             count += 1
         except Exception as ex:
-            print('Exception in publishing message')
-            print(str(ex))
+            pub_logger.debug('Exception in publishing message')
+            pub_logger.debug(str(ex))
 
     # close the publisher
     if producer is not None:

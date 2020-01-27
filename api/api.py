@@ -12,7 +12,7 @@ sys.path.append(dir_path)
 sys.path.append(parent_path)
 
 # other modules
-from video_publisher.frameANDpublish import frame_and_publish
+from publisher.frameANDpublish import frame_and_publish
 from predicter.consumeANDpredict import consume_pred
 from database import consume_save
 

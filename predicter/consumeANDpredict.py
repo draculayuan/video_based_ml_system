@@ -4,7 +4,15 @@ import numpy as np
 from kafka import KafkaConsumer, KafkaProducer
 import time
 import cv2
+import os
+import sys
+import logging
 from model import get_model
+
+dir_path = os.path.dirname(os.path.realpath(__file__)) 
+parent_path = os.path.dirname(dir_path)
+sys.path.append(dir_path)
+sys.path.append(parent_path)
 
 def connect_kafka_producer():
     _producer = None
@@ -30,6 +38,13 @@ def detect_and_predict(detector, im, model):
     return results
 
 def consume_pred(raw_topic, offset, det_path, model_path, display_topic, event):
+    # logger
+    logging.basicConfig(filename="logs/predicter_log.txt",
+                        filemode="a",
+                        level=logging.DEBUG)
+    pre_logger = logging.getLogger()
+    pre_logger.info("New prediction starts")
+
     # producer to publish to display topic
     producer = connect_kafka_producer()
     # face detector to crop faces
@@ -45,7 +60,7 @@ def consume_pred(raw_topic, offset, det_path, model_path, display_topic, event):
     num_trials = 5
     while flag:
         if num_trials == 0:
-            print('Consumer has been idling for 5 times')
+            pre_logger.debug('Consumer has been idling for 5 times')
             break
         for im in consumer:
             # terminate
@@ -60,19 +75,19 @@ def consume_pred(raw_topic, offset, det_path, model_path, display_topic, event):
                 # predict
                 preds = detect_and_predict(detector, im, model)
                 # push to kafka topic
-                print('{} faces detected in current frame'.format(len(preds)))
+                pre_logger.debug('{} faces detected in current frame'.format(len(preds)))
                 for p in preds:
                     try:
                         p_bytes = bytes(str(p), encoding='utf-8')
                         producer.send(display_topic, key=key, value=p_bytes)
                         producer.flush()
-                        print('results {} predicted and published successfully'.format(p))
+                        pre_logger.debug('results {} predicted and published successfully'.format(p))
                     except Exception as ex:
-                        print('A problem occurred when publishing to display topic')
-                        print(str(ex))
+                        pre_logger.debug('A problem occurred when publishing to display topic')
+                        pre_logger.debug(str(ex))
             except Exception as ex:
-                print('failed')
-                print(ex)
+                pre_logger.debug('failed')
+                pre_logger.debug(ex)
 
             num_trials -= 1
     if producer is not None:

@@ -1,11 +1,25 @@
 #from __future__ import absolute_import
-
+import os
+import sys
+import logging
 import numpy as np
 from kafka import KafkaConsumer
 import time
 import pymysql
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+parent_path = os.path.dirname(dir_path)
+sys.path.append(dir_path)
+sys.path.append(parent_path)
+
 def consume_save(display_topic, offset, db_info, event):
+    # logger
+    logging.basicConfig(filename="logs/saver_log.txt",
+                        filemode='a',
+                        level=logging.DEBUG)
+    sav_logger = logging.getLogger()
+    sav_logger.info("New saving starts")
+
     # init db connection
     db = pymysql.connect(db_info['host'], db_info['user'], db_info['passwd'], db_info['db'])
     cursor = db.cursor()
@@ -16,7 +30,7 @@ def consume_save(display_topic, offset, db_info, event):
     num_trials = 5
     while flag:
         if num_trials == 0:
-            print('consumer has been idling for 5 times')
+            sav_logger.debug('consumer has been idling for 5 times')
             break
         for pred in consumer:
             if event.is_set():
@@ -29,10 +43,10 @@ def consume_save(display_topic, offset, db_info, event):
                 query = "INSERT INTO PRED (pred) VALUES ({})".format(pred)
                 cursor.execute(query)
                 db.commit()
-                print('Sucessfully saved sentiment {}'.format(pred))
+                sav_logger.debug('Sucessfully saved sentiment {}'.format(pred))
             except Exception as ex:
-                print('failed')
-                print(ex)
+                sav_logger.debug('failed')
+                sav_logger(ex)
                 db.rollback()
         num_trials -= 1
     consumer.close()
