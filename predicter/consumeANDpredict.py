@@ -42,7 +42,11 @@ def consume_pred(raw_topic, offset, det_path, model_path, display_topic, event):
     key = bytes('display', encoding='utf-8')
     # predict one by one and publish the predicted result
     flag = True
+    num_trials = 5
     while flag:
+        if num_trials == 0:
+            print('Consumer has been idling for 5 times')
+            break
         for im in consumer:
             # terminate
             if event.is_set():
@@ -69,6 +73,8 @@ def consume_pred(raw_topic, offset, det_path, model_path, display_topic, event):
             except Exception as ex:
                 print('failed')
                 print(ex)
+
+            num_trials -= 1
     if producer is not None:
         producer.close()
     consumer.close()

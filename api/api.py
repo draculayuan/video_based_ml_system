@@ -6,6 +6,10 @@ from threading import Thread, Event
 
 if not os.getcwd() in sys.path:
     sys.path.append(os.getcwd())
+dir_path = os.path.dirname(os.path.realpath(__file__))
+parent_path = os.path.dirname(dir_path)
+sys.path.append(dir_path)
+sys.path.append(parent_path)
 
 # other modules
 from video_publisher.frameANDpublish import frame_and_publish
@@ -28,17 +32,18 @@ class ExecThread(Thread):
         print('Thread termination activated...')
 
 
-class API:
+class API(Thread):
     def __init__(self, v_path, det_path, model_path, db_user, db_passwd):
+        Thread.__init__(self)
         self.publisher = ExecThread(frame_and_publish, (v_path, 'raw', 'image'))
-        self.predicter = ExecThread(consume_pred,  ('raw', 'earliest', det_path, model_path, 'display'))
+        self.predicter = ExecThread(consume_pred,  ('raw', 'latest', det_path, model_path, 'display'))
         db_info = {
                 'host': 'localhost',
                 'user': db_user,
                 'passwd': db_passwd,
                 'db': 'sentiment'
                 }
-        self.saver = ExecThread(consume_save, ('display', 'earliest', db_info))
+        self.saver = ExecThread(consume_save, ('display', 'latest', db_info))
     def run(self):
         #Part 1: start frame extraction and publish to kafka topic raw
         self.publisher.start()

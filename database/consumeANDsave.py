@@ -13,7 +13,11 @@ def consume_save(display_topic, offset, db_info, event):
     consumer = KafkaConsumer(display_topic, auto_offset_reset=offset, bootstrap_servers=['localhost:9092'], api_version=(0,10), consumer_timeout_ms=1000)
     # consume one by one and save the result to db
     flag = True
+    num_trials = 5
     while flag:
+        if num_trials == 0:
+            print('consumer has been idling for 5 times')
+            break
         for pred in consumer:
             if event.is_set():
                 flag = False
@@ -30,6 +34,7 @@ def consume_save(display_topic, offset, db_info, event):
                 print('failed')
                 print(ex)
                 db.rollback()
+        num_trials -= 1
     consumer.close()
     db.close()
 
