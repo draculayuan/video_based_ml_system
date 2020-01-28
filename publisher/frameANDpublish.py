@@ -4,6 +4,7 @@ import cv2
 import os
 import sys
 from kafka import KafkaProducer
+from tools import setup_logger
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 parent_path = os.path.dirname(dir_path)
@@ -22,10 +23,7 @@ def connect_kafka_producer():
 
 def frame_and_publish(video_path, topic, key, event):
     # logger
-    logging.basicConfig(filename='logs/publisher_log.txt',
-                        filemode='a',
-                        level=logging.DEBUG)
-    pub_logger = logging.getLogger()
+    pub_logger = setup_logger('pub_log', 'logs/publisher_log.log', logging.DEBUG)
     pub_logger.info("New publishment starts")
 
     producer = connect_kafka_producer()

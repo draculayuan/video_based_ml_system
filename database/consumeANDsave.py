@@ -6,6 +6,7 @@ import numpy as np
 from kafka import KafkaConsumer
 import time
 import pymysql
+from tools import setup_logger
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 parent_path = os.path.dirname(dir_path)
@@ -14,10 +15,7 @@ sys.path.append(parent_path)
 
 def consume_save(display_topic, offset, db_info, event):
     # logger
-    logging.basicConfig(filename="logs/saver_log.txt",
-                        filemode='a',
-                        level=logging.DEBUG)
-    sav_logger = logging.getLogger()
+    sav_logger = setup_logger('sav_log', 'logs/saver_log.log', logging.DEBUG)
     sav_logger.info("New saving starts")
 
     # init db connection
@@ -29,8 +27,7 @@ def consume_save(display_topic, offset, db_info, event):
     flag = True
     num_trials = 5
     while flag:
-        if num_trials == 0:
-            sav_logger.debug('consumer has been idling for 5 times')
+        if event.is_set():
             break
         for pred in consumer:
             if event.is_set():

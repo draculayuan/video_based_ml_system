@@ -8,6 +8,7 @@ import os
 import sys
 import logging
 from model import get_model
+from tools import setup_logger
 
 dir_path = os.path.dirname(os.path.realpath(__file__)) 
 parent_path = os.path.dirname(dir_path)
@@ -39,10 +40,7 @@ def detect_and_predict(detector, im, model):
 
 def consume_pred(raw_topic, offset, det_path, model_path, display_topic, event):
     # logger
-    logging.basicConfig(filename="logs/predicter_log.txt",
-                        filemode="a",
-                        level=logging.DEBUG)
-    pre_logger = logging.getLogger()
+    pre_logger = setup_logger('pre_log', 'logs/predicter_log.log', logging.DEBUG)
     pre_logger.info("New prediction starts")
 
     # producer to publish to display topic
