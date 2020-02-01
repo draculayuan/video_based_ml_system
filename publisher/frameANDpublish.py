@@ -21,13 +21,15 @@ def connect_kafka_producer():
     finally:
         return _producer
 
-def frame_and_publish(video_path, topic, key, event):
+def frame_and_publish(topic, key, event):
     # logger
     pub_logger = setup_logger('pub_log', 'logs/publisher_log.log', logging.DEBUG)
     pub_logger.info("New publishment starts")
 
     producer = connect_kafka_producer()
-    vidcap = cv2.VideoCapture(video_path)
+    print('Trying to open camera')
+    vidcap = cv2.VideoCapture(0)
+    print('Opened camera by index 0 \n\n')
     success, image = vidcap.read()
     count = 0
     while success:

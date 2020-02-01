@@ -33,9 +33,9 @@ class ExecThread(Thread):
 
 
 class API(Thread):
-    def __init__(self, v_path, det_path, model_path, db_user, db_passwd):
+    def __init__(self, det_path, model_path, db_user, db_passwd):
         Thread.__init__(self)
-        self.publisher = ExecThread(frame_and_publish, (v_path, 'raw', 'image'))
+        self.publisher = ExecThread(frame_and_publish, ('raw', 'image'))
         self.predicter = ExecThread(consume_pred,  ('raw', 'latest', det_path, model_path, 'display'))
         db_info = {
                 'host': 'localhost',
