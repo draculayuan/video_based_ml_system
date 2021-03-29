@@ -150,7 +150,7 @@ pycparser==2.19
 pycrypto==2.6.1
 pycurl==7.43.0.3
 pyflakes==2.1.1
-Pygments==2.5.2
+Pygments==2.7.4
 PyHamcrest==2.0.0
 pylint==2.4.4
 PyMySQL==0.9.3
